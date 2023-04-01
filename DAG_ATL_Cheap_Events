@@ -9,7 +9,7 @@ default_args = {
     'depends_on_past': False,
     'start_date': datetime(2023, 4, 1),
     'email': ['youremail@yourdomain.com'],
-    'email_on_failure': False,
+    'email_on_failure': True,
     'email_on_retry': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
@@ -25,6 +25,7 @@ dag = DAG(
 def API_to_MySQL():
 
     try:
+        
         TM_API_KEY = ' '
         SG_API_KEY = ' '
 
@@ -57,6 +58,7 @@ def API_to_MySQL():
         cnx = mysql.connector.connect(**db_config)
         cursor = cnx.cursor()
 
+        # Insert the data from the Ticketmaster API into the MySQL database
         for event in tm_events:
             name = event['name']
             date = event.get('dates', {}).get('start', {}).get('localDate')
@@ -75,6 +77,7 @@ def API_to_MySQL():
             if event.get('segment', {}).get('name') == 'Music':
                 genre = ', '.join([g['name'] for g in event.get('genre', [])])
 
+            # Insert or update the data in the MySQL table
             insert_query = ("INSERT INTO events "
                             "(name, date, venue_name, address, city, state, country, postal_code, min_price, max_price, event_type, genre) "
                             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
@@ -85,6 +88,7 @@ def API_to_MySQL():
             cnx.commit()
             print(f"{name} inserted/updated in MySQL")
 
+        # Insert the data from the SeatGeek API into the MySQL database
         # Insert the data from the SeatGeek API into the MySQL database
         for event in sg_events:
             name = event['title']
@@ -104,6 +108,7 @@ def API_to_MySQL():
             else:
                 genre = None
 
+            # Insert or update the data in the MySQL table
             insert_query = ("INSERT INTO events "
                             "(name, date, venue_name, address, city, state, country, postal_code, min_price, max_price, event_type, genre) "
                             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
@@ -131,15 +136,12 @@ def API_to_MySQL():
     pass
 
 task_1 = PythonOperator(
-    task_id='get_data_from_api',
-    python_callable=get_data_from_api,
+    task_id='API_to_MySQL',
+    python_callable=API_to_MySQL,
     dag=dag,
 )
 
-
-
-
-def MySql_to_Email():
+def mysql_to_api():
 
     import mysql.connector
     import csv
@@ -150,6 +152,7 @@ def MySql_to_Email():
     from email.mime.application import MIMEApplication
 
     try:
+        # Connect to MySQL and get data from the cheap_events table
         db_config = {
             'user': ' ',
             'password': ' ',
@@ -219,8 +222,8 @@ def MySql_to_Email():
     pass
 
 task_2 = PythonOperator(
-    task_id='MySql_to_Email',
-    python_callable=MySql_to_Email,
+    task_id='mysql_to_email',
+    python_callable=mysql_to_api,
     dag=dag,
 )
 

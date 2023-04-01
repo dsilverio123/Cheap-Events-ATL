@@ -89,7 +89,6 @@ def API_to_MySQL():
             print(f"{name} inserted/updated in MySQL")
 
         # Insert the data from the SeatGeek API into the MySQL database
-        # Insert the data from the SeatGeek API into the MySQL database
         for event in sg_events:
             name = event['title']
             date = event.get('datetime_local')

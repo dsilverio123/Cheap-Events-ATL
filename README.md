@@ -4,6 +4,7 @@
 <body>
 	<h1>Cheap Events ATL Mini-Project</h1>
 	<p>A cloud-based data pipeline that fetches the latest event and cheapest events from Ticketmaster and SeatGeek APIs and delivers it straight to your inbox.</p>
+	<img src="https://github.com/dsilverio123/Cheap-Events-ATL/blob/main/Data%20Pipeline%20ATL.png?raw=true" alt="Data Pipeline ATL">
 	<h2>Overview</h2>
 	<p>This repository contains code for an Airflow DAG that fetches data from two APIs (Ticketmaster and SeatGeek) and stores the data in a MySQL database. The DAG is scheduled to run once per day. It also includes a MySQL trigger that updates a cheap_events table whenever a new row is inserted or an existing row is updated in the main events table, ensuring that the cheap_events table always contains up-to-date data.</p>
 	<h2>Requirements</h2>

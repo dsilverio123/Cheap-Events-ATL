@@ -57,7 +57,6 @@ def API_to_MySQL():
         cnx = mysql.connector.connect(**db_config)
         cursor = cnx.cursor()
 
-        # Insert the data from the Ticketmaster API into the MySQL database
         for event in tm_events:
             name = event['name']
             date = event.get('dates', {}).get('start', {}).get('localDate')
@@ -76,7 +75,6 @@ def API_to_MySQL():
             if event.get('segment', {}).get('name') == 'Music':
                 genre = ', '.join([g['name'] for g in event.get('genre', [])])
 
-            # Insert or update the data in the MySQL table
             insert_query = ("INSERT INTO events "
                             "(name, date, venue_name, address, city, state, country, postal_code, min_price, max_price, event_type, genre) "
                             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
@@ -87,7 +85,6 @@ def API_to_MySQL():
             cnx.commit()
             print(f"{name} inserted/updated in MySQL")
 
-        # Insert the data from the SeatGeek API into the MySQL database
         # Insert the data from the SeatGeek API into the MySQL database
         for event in sg_events:
             name = event['title']
@@ -107,7 +104,6 @@ def API_to_MySQL():
             else:
                 genre = None
 
-            # Insert or update the data in the MySQL table
             insert_query = ("INSERT INTO events "
                             "(name, date, venue_name, address, city, state, country, postal_code, min_price, max_price, event_type, genre) "
                             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
@@ -154,7 +150,6 @@ def MySql_to_Email():
     from email.mime.application import MIMEApplication
 
     try:
-        # Connect to MySQL and get data from the cheap_events table
         db_config = {
             'user': ' ',
             'password': ' ',

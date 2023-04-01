@@ -16,13 +16,13 @@ default_args = {
 }
 
 dag = DAG(
-    'my_dag',
+    'API_to_MySQL',
     default_args=default_args,
-    description='A simple DAG with two tasks',
+    description='A DAG that fetches data from an API and stores it in MySQL',
     schedule_interval=timedelta(days=1),
 )
 
-def my_python_script():
+def API_to_MySQL():
 
     try:
         TM_API_KEY = ' '
@@ -135,15 +135,15 @@ def my_python_script():
     pass
 
 task_1 = PythonOperator(
-    task_id='task_1',
-    python_callable=task_1_function,
+    task_id='get_data_from_api',
+    python_callable=get_data_from_api,
     dag=dag,
 )
 
 
 
 
-def task_2_function():
+def MySql_to_Email():
 
     import mysql.connector
     import csv
@@ -224,12 +224,12 @@ def task_2_function():
     pass
 
 task_2 = PythonOperator(
-    task_id='task_2',
-    python_callable=task_2_function,
+    task_id='MySql_to_Email',
+    python_callable=MySql_to_Email,
     dag=dag,
 )
 
-task_1 >> task_2
+get_data_from_api >> MySql_to_Email
 
 
 

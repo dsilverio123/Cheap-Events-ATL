@@ -1,0 +1,235 @@
+import requests
+import mysql.connector
+from datetime import datetime, timedelta
+from airflow import DAG
+from airflow.operators.python_operator import PythonOperator
+
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2023, 4, 1),
+    'email': ['youremail@yourdomain.com'],
+    'email_on_failure': True,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+dag = DAG(
+    'my_dag',
+    default_args=default_args,
+    description='A simple DAG with two tasks',
+    schedule_interval=timedelta(days=1),
+)
+
+def my_python_script():
+
+    try:
+        TM_API_KEY = ' '
+        SG_API_KEY = ' '
+
+        # Set up the APIs and parameters
+        tm_endpoint = 'https://app.ticketmaster.com/discovery/v2/events.json'
+        tm_params = {'apikey': TM_API_KEY, 'size': 25, 'stateCode': 'GA'}
+
+        sg_endpoint = 'https://api.seatgeek.com/2/events'
+        sg_params = {'client_id': SG_API_KEY, 'per_page': 25, 'venue.city': 'Atlanta'}
+
+        # Make the Ticketmaster API request and get the response
+        tm_response = requests.get(tm_endpoint, params=tm_params)
+        tm_response.raise_for_status() # Raise an exception if the API request fails
+        tm_events = tm_response.json().get('_embedded', {}).get('events', [])
+
+        # Make the SeatGeek API request and get the response
+        sg_response = requests.get(sg_endpoint, params=sg_params)
+        sg_response.raise_for_status() # Raise an exception if the API request fails
+        sg_events = sg_response.json().get('events', [])
+
+        # Connect to MySQL
+        db_config = {
+            'user': ' ',
+            'password': ' ',
+            'host': ' ',
+            'database': ' ',
+            'connection_timeout': 30
+        }
+
+        cnx = mysql.connector.connect(**db_config)
+        cursor = cnx.cursor()
+
+        # Insert the data from the Ticketmaster API into the MySQL database
+        for event in tm_events:
+            name = event['name']
+            date = event.get('dates', {}).get('start', {}).get('localDate')
+            venue = event.get('_embedded', {}).get('venues', [{}])[0]
+            venue_name = venue.get('name')
+            address = venue.get('address', {}).get('line1')
+            city = venue.get('city', {}).get('name')
+            state = venue.get('state', {}).get('name')
+            country = venue.get('country', {}).get('name')
+            postal_code = venue.get('postalCode')
+            price_ranges = event.get('priceRanges', [{'min': None, 'max': None}])
+            min_price = price_ranges[0]['min']
+            max_price = price_ranges[0]['max']
+            event_type = event.get('type')
+            genre = None
+            if event.get('segment', {}).get('name') == 'Music':
+                genre = ', '.join([g['name'] for g in event.get('genre', [])])
+
+            # Insert or update the data in the MySQL table
+            insert_query = ("INSERT INTO events "
+                            "(name, date, venue_name, address, city, state, country, postal_code, min_price, max_price, event_type, genre) "
+                            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                            "ON DUPLICATE KEY UPDATE "
+                            "min_price = VALUES(min_price), max_price = VALUES(max_price)")
+            insert_values = (name, date, venue_name, address, city, state, country, postal_code, min_price, max_price, event_type, genre)
+            cursor.execute(insert_query, insert_values)
+            cnx.commit()
+            print(f"{name} inserted/updated in MySQL")
+
+        # Insert the data from the SeatGeek API into the MySQL database
+        # Insert the data from the SeatGeek API into the MySQL database
+        for event in sg_events:
+            name = event['title']
+            date = event.get('datetime_local')
+            venue = event.get('venue', {})
+            venue_name = venue.get('name')
+            address = venue.get('address')
+            city = venue.get('city')
+            state = venue.get('state')
+            country = venue.get('country')
+            postal_code = venue.get('postal_code')
+            min_price = event.get('stats', {}).get('lowest_price_good_deals')
+            max_price = event.get('stats', {}).get('highest_price')
+            event_type = event.get('type')
+            if 'taxonomies' in event and isinstance(event['taxonomies'], list):
+                genre = ', '.join([g['name'] for g in event['taxonomies'] if 'name' in g])
+            else:
+                genre = None
+
+            # Insert or update the data in the MySQL table
+            insert_query = ("INSERT INTO events "
+                            "(name, date, venue_name, address, city, state, country, postal_code, min_price, max_price, event_type, genre) "
+                            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                            "ON DUPLICATE KEY UPDATE "
+                            "min_price = VALUES(min_price), max_price = VALUES(max_price)")
+            insert_values = (name, date, venue_name, address, city, state, country, postal_code, min_price, max_price, event_type, genre)
+            cursor.execute(insert_query, insert_values)
+            cnx.commit()
+            print(f"{name} inserted/updated in MySQL")
+
+
+    except requests.exceptions.HTTPError as e:
+        print(f"Error: {e}")
+    except mysql.connector.Error as e:
+        print(f"MySQL Error: {e}")
+
+    finally:
+        if cursor:
+            cursor.close()
+        if cnx:
+            cnx.close()
+
+    print("Script finished successfully.")
+
+    pass
+
+task_1 = PythonOperator(
+    task_id='task_1',
+    python_callable=task_1_function,
+    dag=dag,
+)
+
+
+
+
+def task_2_function():
+
+    import mysql.connector
+    import csv
+    import datetime
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from email.mime.application import MIMEApplication
+
+    try:
+        # Connect to MySQL and get data from the cheap_events table
+        db_config = {
+            'user': ' ',
+            'password': ' ',
+            'host': ' ',
+            'database': ' ',
+            'connection_timeout': 30
+        }
+
+        cnx = mysql.connector.connect(**db_config)
+        cursor = cnx.cursor()
+
+        select_query = "SELECT * FROM cheap_events"
+        cursor.execute(select_query)
+        rows = cursor.fetchall()
+
+        # Get current datetime
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Create CSV file with data from the cheap_events table
+        file_name = f'cheap_events_{current_time}.csv'
+        with open(file_name, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow([i[0] for i in cursor.description])  # write headers
+            writer.writerows(rows)
+
+        # Get number of events
+        num_events = len(rows)
+
+        # Send email with CSV file as attachment and number of events in body
+        sender_email = " "
+        sender_password = " "
+        receiver_email = " "
+
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+        msg['Subject'] = f"Cheap Events Atlanta ({num_events} Events) - {current_time}"
+
+        body = f"Hi Daniel,
+        
+        There are {num_events} events in the Cheap Events table.\n\n"
+        msg.attach(MIMEText(body, "plain"))
+
+        with open(file_name, 'rb') as file:
+            attach = MIMEApplication(file.read(),_subtype="csv")
+            attach.add_header('Content-Disposition','attachment',filename=str(file_name))
+            msg.attach(attach)
+
+        smtp_server = smtplib.SMTP('smtp.office365.com', 587)
+        smtp_server.starttls()
+        smtp_server.login(sender_email, sender_password)
+        smtp_server.sendmail(sender_email, receiver_email, msg.as_string())
+        smtp_server.quit()
+
+
+    except mysql.connector.Error as e:
+        print(f"MySQL Error: {e}")
+
+    finally:
+        if cursor:
+            cursor.close()
+        if cnx:
+            cnx.close()
+
+    print("Script finished successfully.")
+
+    pass
+
+task_2 = PythonOperator(
+    task_id='task_2',
+    python_callable=task_2_function,
+    dag=dag,
+)
+
+task_1 >> task_2
+
+
+

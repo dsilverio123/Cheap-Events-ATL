@@ -1,0 +1,31 @@
+| trg_move_to_cheap_events | INSERT | events | BEGIN
+    IF NEW.min_price < 60 THEN
+        INSERT INTO cheap_events
+        (name, date, venue_name, address, city, state, country, postal_code, min_price, max_price, event_type, genre)
+        VALUES (NEW.name, NEW.date, NEW.venue_name, NEW.address, NEW.city, NEW.state, NEW.country, NEW.postal_code,
+                NEW.min_price, NEW.max_price, NEW.event_type, NEW.genre);
+    END IF;
+ END
+
+/////////////////////////////////////////
+
+| trg_update_cheap_events  | UPDATE | events | BEGIN
+    IF NEW.min_price < 60 THEN
+        UPDATE cheap_events
+        SET name = NEW.name,
+            date = NEW.date,
+            venue_name = NEW.venue_name,
+            address = NEW.address,
+            city = NEW.city,
+            state = NEW.state,
+            country = NEW.country,
+            postal_code = NEW.postal_code,
+            min_price = NEW.min_price,
+            max_price = NEW.max_price,
+            event_type = NEW.event_type,
+            genre = NEW.genre
+        WHERE name = OLD.name AND date = OLD.date;
+    ELSE
+        DELETE FROM cheap_events WHERE name = OLD.name AND date = OLD.date;
+    END IF;
+END | AFTER

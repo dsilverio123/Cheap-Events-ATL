@@ -1,0 +1,19 @@
+mysql> describe events;
+
++-------------+---------------+------+-----+---------+----------------+
+| Field       | Type          | Null | Key | Default | Extra          |
++-------------+---------------+------+-----+---------+----------------+
+| id          | int           | NO   | PRI | NULL    | auto_increment |
+| name        | varchar(255)  | YES  |     | NULL    |                |
+| date        | date          | YES  |     | NULL    |                |
+| venue_name  | varchar(255)  | YES  |     | NULL    |                |
+| address     | varchar(255)  | YES  |     | NULL    |                |
+| city        | varchar(255)  | YES  |     | NULL    |                |
+| state       | varchar(255)  | YES  |     | NULL    |                |
+| country     | varchar(255)  | YES  |     | NULL    |                |
+| postal_code | varchar(20)   | YES  |     | NULL    |                |
+| min_price   | decimal(10,2) | YES  |     | NULL    |                |
+| max_price   | decimal(10,2) | YES  |     | NULL    |                |
+| event_type  | varchar(255)  | YES  |     | NULL    |                |
+| genre       | varchar(255)  | YES  |     | NULL    |                |
++-------------+---------------+------+-----+---------+----------------+

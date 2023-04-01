@@ -14,14 +14,6 @@
 		<li>An AWS RDS MySQL server to store the data</li>
 		<li>Python 3.6 or higher</li>
 		<li>The following Python packages (requirements.txt):</li>
-		<ul>
-			<li>mysql-connector-python</li>
-			<li>requests</li>
-			<li>smtplib</li>
-			<li>csv</li>
-			<li>datetime</li>
-			<li>airflow</li>
-		</ul>
 	</ul>
 	<h2>Installation</h2>
 	<p>To set up the pipeline, follow these steps:</p>

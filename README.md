@@ -14,7 +14,8 @@
 		<li>An Outlook email account for sending the CSV file</li>
 		<li>An AWS RDS MySQL server to store the data</li>
 		<li>Python 3.6 or higher</li>
-		<li>The following Python packages (requirements.txt):</li>
+		<li>T3 EC2 Amazon Instance</li>
+		<li>The following Python packages installed on the EC2 (requirements.txt):</li>
 	</ul>
 	<h2>Installation</h2>
 	<p>To set up the pipeline, follow these steps:</p>
